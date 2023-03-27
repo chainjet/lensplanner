@@ -1,13 +1,17 @@
 import CreatePostForm from '@/components/CreatePostForm'
 import Footer from '@/components/Footer'
+import PostScheduledAlert from '@/components/PostScheduledAlert'
 import styles from '@/styles/Home.module.css'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { Inter } from 'next/font/google'
 import Head from 'next/head'
+import { useState } from 'react'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
+  const [postScheduled, setPostScheduled] = useState<string | null>(null)
+
   return (
     <>
       <Head>
@@ -28,7 +32,11 @@ export default function Home() {
         </div>
 
         <div className={`${styles.center} w-full`}>
-          <CreatePostForm />
+          {postScheduled ? (
+            <PostScheduledAlert workflowId={postScheduled} onDismiss={() => setPostScheduled(null)} />
+          ) : (
+            <CreatePostForm onPostScheduled={setPostScheduled} />
+          )}
         </div>
 
         <Footer />

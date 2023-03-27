@@ -30,7 +30,11 @@ function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ')
 }
 
-export default function CreatePostForm() {
+interface Props {
+  onPostScheduled: (workflowId: string) => void
+}
+
+export default function CreatePostForm({ onPostScheduled }: Props) {
   const [signInModalOpen, setSignInModalOpen] = useState(false)
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false)
   const [selected, setSelected] = useState(moods[5])
@@ -62,11 +66,12 @@ export default function CreatePostForm() {
       datetime: scheduleDate.toISOString(),
       content: post,
     }
-    await schedulePost('6421dc49f0e8d05438a6eed5', templateData, lensCredentials)
+    const workflowId = await schedulePost('6421dc49f0e8d05438a6eed5', templateData, lensCredentials)
     setPost('')
     setLoading(false)
     setFormSubmitted(false)
     setScheduleDate(null)
+    onPostScheduled(workflowId)
   }
 
   const handleSignInCancel = () => {

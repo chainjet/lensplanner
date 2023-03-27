@@ -30,16 +30,18 @@ export function useSchedulePost() {
   const schedulePost = useCallback(
     async (id: string, templateInputs: any, lensCredentials: { id: string; name: string }) => {
       setLoading(true)
+      let newWorkflowId = null
       try {
         const credentialIds = {
           [lensAccountCredentialId]: lensCredentials.id,
         }
-        const workflowId = await forkWorkflow(id, templateInputs, credentialIds)
-        setWorkflowId(workflowId)
+        newWorkflowId = await forkWorkflow(id, templateInputs, credentialIds)
+        setWorkflowId(newWorkflowId)
       } catch (err) {
         setError(err as Error)
       }
       setLoading(false)
+      return newWorkflowId
     },
     [],
   )

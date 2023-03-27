@@ -58,7 +58,7 @@ export default function Footer() {
           description="Present your self to your new followers with an automated DM."
         />
         <FooterCard
-          link="https://lenster.xyz/u/RemindMeBot"
+          link="https://chainjet.io/workflows/637e7f107e05eafff4c61624"
           logos={[
             {
               src: 'https://raw.githubusercontent.com/chainjet/assets/master/integrations/twitter.svg',
@@ -73,7 +73,7 @@ export default function Footer() {
           description="Share all your tweets on Lens. You can also setup filters to share specific posts."
         />
         <FooterCard
-          link="https://lenster.xyz/u/RemindMeBot"
+          link="https://chainjet.io/workflows/639b8156c8865c4d46fb8eed"
           logos={[
             {
               src: 'https://raw.githubusercontent.com/chainjet/assets/master/integrations/rss.svg',
