@@ -85,7 +85,7 @@ export default function CreatePostForm() {
   return (
     <div className="flex items-start space-x-4 bg-black" style={{ width: 600 }}>
       <div className="flex-shrink-0">{address && <WalletAvatar address={address} />}</div>
-      <div className="min-w-0 flex-1">
+      <div className="flex-1 min-w-0">
         <form action="#" className="relative" onSubmit={handleSubmit}>
           <div className="overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600">
             <label htmlFor="post" className="sr-only">
@@ -117,7 +117,7 @@ export default function CreatePostForm() {
                     type="button"
                     className="-m-2.5 flex h-10 w-10 items-center justify-center rounded-full text-gray-400 hover:text-gray-500"
                   >
-                    <PaperClipIcon className="h-5 w-5" aria-hidden="true" />
+                    <PaperClipIcon className="w-5 h-5" aria-hidden="true" />
                     <span className="sr-only">Attach a file</span>
                   </button>
                 </Tooltip>
@@ -132,7 +132,7 @@ export default function CreatePostForm() {
                           <span className="flex items-center justify-center">
                             {selected.value === null ? (
                               <span>
-                                <FaceSmileIcon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
+                                <FaceSmileIcon className="flex-shrink-0 w-5 h-5" aria-hidden="true" />
                                 <span className="sr-only"> Add your mood </span>
                               </span>
                             ) : (
@@ -143,7 +143,7 @@ export default function CreatePostForm() {
                                     'flex h-8 w-8 items-center justify-center rounded-full',
                                   )}
                                 >
-                                  <selected.icon className="h-5 w-5 flex-shrink-0 text-white" aria-hidden="true" />
+                                  <selected.icon className="flex-shrink-0 w-5 h-5 text-white" aria-hidden="true" />
                                 </span>
                                 <span className="sr-only">{selected.name}</span>
                               </span>
@@ -158,7 +158,7 @@ export default function CreatePostForm() {
                           leaveFrom="opacity-100"
                           leaveTo="opacity-0"
                         >
-                          <Listbox.Options className="absolute z-10 mt-1 -ml-6 w-60 rounded-lg bg-white py-3 text-base shadow ring-1 ring-black ring-opacity-5 focus:outline-none sm:ml-auto sm:w-64 sm:text-sm">
+                          <Listbox.Options className="absolute z-10 py-3 mt-1 -ml-6 text-base bg-white rounded-lg shadow w-60 ring-1 ring-black ring-opacity-5 focus:outline-none sm:ml-auto sm:w-64 sm:text-sm">
                             {moods.map((mood) => (
                               <Listbox.Option
                                 key={mood.value}
@@ -182,7 +182,7 @@ export default function CreatePostForm() {
                                       aria-hidden="true"
                                     />
                                   </div>
-                                  <span className="ml-3 block truncate font-medium">{mood.name}</span>
+                                  <span className="block ml-3 font-medium truncate">{mood.name}</span>
                                 </div>
                               </Listbox.Option>
                             ))}
@@ -202,7 +202,7 @@ export default function CreatePostForm() {
                     type="button"
                     className="-m-2.5 flex h-10 w-10 items-center justify-center rounded-full text-gray-400 hover:text-gray-500"
                   >
-                    <CalendarIcon className="h-5 w-5" aria-hidden="true" />
+                    <CalendarIcon className="w-5 h-5" aria-hidden="true" />
                     <span className="sr-only">Set schedule</span>
                   </button>
                 </Tooltip>
@@ -210,7 +210,7 @@ export default function CreatePostForm() {
               <div>
                 <button
                   type="submit"
-                  className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                  className="inline-flex items-center px-3 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                 >
                   {loading ? <Loading /> : 'Post'}
                 </button>
