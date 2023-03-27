@@ -1,7 +1,9 @@
 import { useSchedulePost } from '@/hooks/chainjet.hooks'
+import { CollectionSettings } from '@/utils/types'
 import { Listbox, Transition } from '@headlessui/react'
 import {
   CalendarIcon,
+  CircleStackIcon,
   FaceFrownIcon,
   FaceSmileIcon,
   FireIcon,
@@ -13,6 +15,7 @@ import {
 import { Loading, Tooltip } from '@nextui-org/react'
 import { FormEvent, Fragment, useState } from 'react'
 import { useAccount } from 'wagmi'
+import CollectSettingsModal from './CollectSettingsModal'
 import ScheduleModal from './ScheduleModal'
 import SignInModal from './SignInModal'
 import WalletAvatar from './WalletAvatar'
@@ -37,16 +40,21 @@ interface Props {
 export default function CreatePostForm({ onPostScheduled }: Props) {
   const [signInModalOpen, setSignInModalOpen] = useState(false)
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false)
+  const [collectSettingsModalOpen, setCollectSettingsModalOpen] = useState(false)
   const [selected, setSelected] = useState(moods[5])
   const [loading, setLoading] = useState(false)
   const [formSubmitted, setFormSubmitted] = useState(false)
   const [post, setPost] = useState('')
   const [scheduleDate, setScheduleDate] = useState<Date | null>(null)
+  const [collectionSettings, setCollectionSettings] = useState<CollectionSettings>({ collect: 'anyone' })
   const { address } = useAccount()
   const { schedulePost } = useSchedulePost()
 
   async function handleSubmit(e?: FormEvent<HTMLFormElement>) {
     e?.preventDefault()
+    if (!post) {
+      return
+    }
     if (!scheduleDate) {
       setFormSubmitted(true)
       setScheduleModalOpen(true)
@@ -65,6 +73,7 @@ export default function CreatePostForm({ onPostScheduled }: Props) {
     const templateData = {
       datetime: scheduleDate.toISOString(),
       content: post,
+      ...collectionSettings,
     }
     const workflowId = await schedulePost('6421dc49f0e8d05438a6eed5', templateData, lensCredentials)
     setPost('')
@@ -85,6 +94,11 @@ export default function CreatePostForm({ onPostScheduled }: Props) {
     if (formSubmitted) {
       handleSubmit()
     }
+  }
+
+  const handleCollectionSettingsChange = (settings: CollectionSettings) => {
+    setCollectionSettings(settings)
+    setCollectSettingsModalOpen(false)
   }
 
   return (
@@ -124,6 +138,18 @@ export default function CreatePostForm({ onPostScheduled }: Props) {
                   >
                     <PaperClipIcon className="w-5 h-5" aria-hidden="true" />
                     <span className="sr-only">Attach a file</span>
+                  </button>
+                </Tooltip>
+              </div>
+              <div className="flex items-center">
+                <Tooltip content={'Collect Settings'} rounded color="primary" placement="bottom">
+                  <button
+                    onClick={() => setCollectSettingsModalOpen(true)}
+                    type="button"
+                    className="-m-2.5 flex h-10 w-10 items-center justify-center rounded-full text-gray-400 hover:text-gray-500"
+                  >
+                    <CircleStackIcon className="w-5 h-5" aria-hidden="true" />
+                    <span className="sr-only">Collect Settings</span>
                   </button>
                 </Tooltip>
               </div>
@@ -233,6 +259,13 @@ export default function CreatePostForm({ onPostScheduled }: Props) {
       {signInModalOpen && <SignInModal open onCancel={handleSignInCancel} onSignIn={handleSignIn} />}
       {scheduleModalOpen && (
         <ScheduleModal open onCancel={() => setScheduleModalOpen(false)} onSchedule={handleScheduleSelected} />
+      )}
+      {collectSettingsModalOpen && (
+        <CollectSettingsModal
+          open
+          onCancel={() => setCollectSettingsModalOpen(false)}
+          onConfirm={handleCollectionSettingsChange}
+        />
       )}
     </div>
   )
