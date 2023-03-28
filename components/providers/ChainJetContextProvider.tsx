@@ -1,11 +1,12 @@
 import { fetchViewer } from '@/services/chainjet.service'
-import { createContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useEffect, useState } from 'react'
 
 export const ChainJetContext = createContext<{
   id: string | null
   isConnected: boolean
   loading: boolean
-}>({ id: null, isConnected: false, loading: true })
+  refetch: () => Promise<void>
+}>({ id: null, isConnected: false, loading: true, refetch: async () => {} })
 
 interface Props {
   children: JSX.Element[] | JSX.Element
@@ -16,22 +17,22 @@ const ChainJetContextProvider = ({ children }: Props) => {
   const [loading, setLoading] = useState(false)
   const [id, setId] = useState<string | null>(null)
 
+  const refetch = useCallback(async () => {
+    const viewer = await fetchViewer()
+    if (viewer) {
+      setId(viewer.id)
+      setIsConnected(true)
+    }
+    setLoading(false)
+  }, [])
+
   useEffect(() => {
-    const run = async () => {
-      const viewer = await fetchViewer()
-      if (viewer) {
-        setId(viewer.id)
-        setIsConnected(true)
-      }
-      setLoading(false)
-    }
-
     if (localStorage['chainjet.token']) {
-      run()
+      refetch()
     }
-  }, [setIsConnected])
+  }, [refetch, setIsConnected])
 
-  return <ChainJetContext.Provider value={{ id, isConnected, loading }}>{children}</ChainJetContext.Provider>
+  return <ChainJetContext.Provider value={{ id, isConnected, loading, refetch }}>{children}</ChainJetContext.Provider>
 }
 
 export default ChainJetContextProvider

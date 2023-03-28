@@ -50,6 +50,30 @@ export async function forkWorkflow(id: string, templateInputs: any, credentialId
   return data?.forkWorkflow?.id
 }
 
+export async function createCredentials(credentials: {
+  name: string
+  integrationAccount: string
+  inputs: Record<string, any>
+}) {
+  const query = `
+  mutation ($input: CreateOneAccountCredentialInput!) {
+    createOneAccountCredential(input: $input) {
+      id
+    }
+  }`
+  const variables = {
+    input: {
+      accountCredential: {
+        name: credentials.name,
+        integrationAccount: credentials.integrationAccount,
+        credentialInputs: credentials.inputs,
+      },
+    },
+  }
+  const data = await sendQuery(query, variables)
+  return data?.createOneAccountCredential?.id
+}
+
 async function sendQuery(query: string, variables: Record<string, any> = {}) {
   const res = await fetch('https://api.chainjet.io/graphql', {
     method: 'POST',

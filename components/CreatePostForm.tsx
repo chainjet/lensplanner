@@ -1,17 +1,7 @@
 import { useSchedulePost } from '@/hooks/chainjet.hooks'
 import { CollectionSettings } from '@/utils/types'
 import { Listbox, Transition } from '@headlessui/react'
-import {
-  CalendarIcon,
-  CircleStackIcon,
-  FaceFrownIcon,
-  FaceSmileIcon,
-  FireIcon,
-  HandThumbUpIcon,
-  HeartIcon,
-  PaperClipIcon,
-  XMarkIcon,
-} from '@heroicons/react/20/solid'
+import { CalendarIcon, CircleStackIcon, MusicalNoteIcon, PhotoIcon, VideoCameraIcon } from '@heroicons/react/20/solid'
 import { Loading, Tooltip } from '@nextui-org/react'
 import { FormEvent, Fragment, useState } from 'react'
 import { useAccount } from 'wagmi'
@@ -20,13 +10,10 @@ import ScheduleModal from './ScheduleModal'
 import SignInModal from './SignInModal'
 import WalletAvatar from './WalletAvatar'
 
-const moods = [
-  { name: 'Excited', value: 'excited', icon: FireIcon, iconColor: 'text-white', bgColor: 'bg-red-500' },
-  { name: 'Loved', value: 'loved', icon: HeartIcon, iconColor: 'text-white', bgColor: 'bg-pink-400' },
-  { name: 'Happy', value: 'happy', icon: FaceSmileIcon, iconColor: 'text-white', bgColor: 'bg-green-400' },
-  { name: 'Sad', value: 'sad', icon: FaceFrownIcon, iconColor: 'text-white', bgColor: 'bg-yellow-400' },
-  { name: 'Thumbsy', value: 'thumbsy', icon: HandThumbUpIcon, iconColor: 'text-white', bgColor: 'bg-blue-500' },
-  { name: 'I feel nothing', value: null, icon: XMarkIcon, iconColor: 'text-gray-400', bgColor: 'bg-transparent' },
+const uploadMediaOptions = [
+  { name: 'Upload image(s)', value: 'image', icon: PhotoIcon, iconColor: 'text-white', bgColor: 'bg-red-500' },
+  { name: 'Upload video', value: 'video', icon: VideoCameraIcon, iconColor: 'text-white', bgColor: 'bg-pink-400' },
+  { name: 'Upload audio', value: 'audio', icon: MusicalNoteIcon, iconColor: 'text-white', bgColor: 'bg-green-400' },
 ]
 
 function classNames(...classes: string[]) {
@@ -41,7 +28,6 @@ export default function CreatePostForm({ onPostScheduled }: Props) {
   const [signInModalOpen, setSignInModalOpen] = useState(false)
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false)
   const [collectSettingsModalOpen, setCollectSettingsModalOpen] = useState(false)
-  const [selected, setSelected] = useState(moods[5])
   const [loading, setLoading] = useState(false)
   const [formSubmitted, setFormSubmitted] = useState(false)
   const [post, setPost] = useState('')
@@ -55,7 +41,7 @@ export default function CreatePostForm({ onPostScheduled }: Props) {
     if (!post) {
       return
     }
-    if (!scheduleDate) {
+    if (!scheduleDate && !formSubmitted) {
       setFormSubmitted(true)
       setScheduleModalOpen(true)
       return
@@ -89,8 +75,8 @@ export default function CreatePostForm({ onPostScheduled }: Props) {
   }
 
   const handleScheduleSelected = (date: Date) => {
-    setScheduleDate(date)
     setScheduleModalOpen(false)
+    setScheduleDate(date)
     if (formSubmitted) {
       handleSubmit()
     }
@@ -99,6 +85,10 @@ export default function CreatePostForm({ onPostScheduled }: Props) {
   const handleCollectionSettingsChange = (settings: CollectionSettings) => {
     setCollectionSettings(settings)
     setCollectSettingsModalOpen(false)
+  }
+
+  const handleMediaOption = (option: typeof uploadMediaOptions[number]) => {
+    console.log(`Upload ${option.value}`)
   }
 
   return (
@@ -131,15 +121,60 @@ export default function CreatePostForm({ onPostScheduled }: Props) {
           <div className="absolute inset-x-0 bottom-0 flex justify-between py-2 pl-3 pr-2">
             <div className="flex items-center space-x-5">
               <div className="flex items-center">
-                <Tooltip content={'Attach a file'} rounded color="primary" placement="bottom">
-                  <button
-                    type="button"
-                    className="-m-2.5 flex h-10 w-10 items-center justify-center rounded-full text-gray-400 hover:text-gray-500"
-                  >
-                    <PaperClipIcon className="w-5 h-5" aria-hidden="true" />
-                    <span className="sr-only">Attach a file</span>
-                  </button>
-                </Tooltip>
+                <Listbox onChange={handleMediaOption}>
+                  {({ open }) => (
+                    <>
+                      <div className="relative">
+                        <Tooltip content={'Attach media'} rounded color="primary" placement="bottom">
+                          <Listbox.Button className="relative -m-2.5 flex h-10 w-10 items-center justify-center rounded-full text-gray-400 hover:text-gray-500">
+                            <span className="flex items-center justify-center">
+                              <PhotoIcon className="flex-shrink-0 w-5 h-5" aria-hidden="true" />
+                              <span className="sr-only">Attach media</span>
+                            </span>
+                          </Listbox.Button>
+                        </Tooltip>
+
+                        <Transition
+                          show={open}
+                          as={Fragment}
+                          leave="transition ease-in duration-100"
+                          leaveFrom="opacity-100"
+                          leaveTo="opacity-0"
+                        >
+                          <Listbox.Options className="absolute z-10 py-3 mt-1 -ml-6 text-base bg-gray-800 rounded-lg shadow w-60 ring-1 ring-black ring-opacity-5 focus:outline-none sm:ml-auto sm:w-64 sm:text-sm">
+                            {uploadMediaOptions.map((option) => (
+                              <Listbox.Option
+                                key={option.value}
+                                className={({ active }) =>
+                                  classNames(
+                                    active ? 'bg-gray-600' : 'bg-gray-800',
+                                    'relative cursor-default select-none py-2 px-3',
+                                  )
+                                }
+                                value={option}
+                              >
+                                <div className="flex items-center cursor-pointer">
+                                  <div
+                                    className={classNames(
+                                      option.bgColor,
+                                      'flex h-8 w-8 items-center justify-center rounded-full',
+                                    )}
+                                  >
+                                    <option.icon
+                                      className={classNames(option.iconColor, 'h-5 w-5 flex-shrink-0')}
+                                      aria-hidden="true"
+                                    />
+                                  </div>
+                                  <span className="block ml-3 font-medium truncate">{option.name}</span>
+                                </div>
+                              </Listbox.Option>
+                            ))}
+                          </Listbox.Options>
+                        </Transition>
+                      </div>
+                    </>
+                  )}
+                </Listbox>
               </div>
               <div className="flex items-center">
                 <Tooltip content={'Collect Settings'} rounded color="primary" placement="bottom">
@@ -152,77 +187,6 @@ export default function CreatePostForm({ onPostScheduled }: Props) {
                     <span className="sr-only">Collect Settings</span>
                   </button>
                 </Tooltip>
-              </div>
-              <div className="flex items-center">
-                <Listbox value={selected} onChange={setSelected}>
-                  {({ open }) => (
-                    <>
-                      <Listbox.Label className="sr-only"> Your mood </Listbox.Label>
-                      <div className="relative">
-                        <Listbox.Button className="relative -m-2.5 flex h-10 w-10 items-center justify-center rounded-full text-gray-400 hover:text-gray-500">
-                          <span className="flex items-center justify-center">
-                            {selected.value === null ? (
-                              <span>
-                                <FaceSmileIcon className="flex-shrink-0 w-5 h-5" aria-hidden="true" />
-                                <span className="sr-only"> Add your mood </span>
-                              </span>
-                            ) : (
-                              <span>
-                                <span
-                                  className={classNames(
-                                    selected.bgColor,
-                                    'flex h-8 w-8 items-center justify-center rounded-full',
-                                  )}
-                                >
-                                  <selected.icon className="flex-shrink-0 w-5 h-5 text-white" aria-hidden="true" />
-                                </span>
-                                <span className="sr-only">{selected.name}</span>
-                              </span>
-                            )}
-                          </span>
-                        </Listbox.Button>
-
-                        <Transition
-                          show={open}
-                          as={Fragment}
-                          leave="transition ease-in duration-100"
-                          leaveFrom="opacity-100"
-                          leaveTo="opacity-0"
-                        >
-                          <Listbox.Options className="absolute z-10 py-3 mt-1 -ml-6 text-base bg-white rounded-lg shadow w-60 ring-1 ring-black ring-opacity-5 focus:outline-none sm:ml-auto sm:w-64 sm:text-sm">
-                            {moods.map((mood) => (
-                              <Listbox.Option
-                                key={mood.value}
-                                className={({ active }) =>
-                                  classNames(
-                                    active ? 'bg-gray-100' : 'bg-white',
-                                    'relative cursor-default select-none py-2 px-3',
-                                  )
-                                }
-                                value={mood}
-                              >
-                                <div className="flex items-center">
-                                  <div
-                                    className={classNames(
-                                      mood.bgColor,
-                                      'flex h-8 w-8 items-center justify-center rounded-full',
-                                    )}
-                                  >
-                                    <mood.icon
-                                      className={classNames(mood.iconColor, 'h-5 w-5 flex-shrink-0')}
-                                      aria-hidden="true"
-                                    />
-                                  </div>
-                                  <span className="block ml-3 font-medium truncate">{mood.name}</span>
-                                </div>
-                              </Listbox.Option>
-                            ))}
-                          </Listbox.Options>
-                        </Transition>
-                      </div>
-                    </>
-                  )}
-                </Listbox>
               </div>
             </div>
             <div className="flex gap-4">

@@ -1,8 +1,8 @@
-import { useLensCredentials, useUser } from '@/hooks/chainjet.hooks'
+import { useCreateLensCredentials, useLensCredentials, useUser } from '@/hooks/chainjet.hooks'
 import { useActiveProfile } from '@lens-protocol/react'
-import { Modal, Text } from '@nextui-org/react'
+import { Loading, Modal, Text } from '@nextui-org/react'
 import { useConnectModal } from '@rainbow-me/rainbowkit'
-import { useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useAccount } from 'wagmi'
 import SignInWithChainJet from './SignInWithChainJet'
 import SignInWithLens from './SignInWithLens'
@@ -14,11 +14,15 @@ interface Props {
 }
 
 export default function SignInModal({ open, onSignIn, onCancel }: Props) {
-  const { address, isConnected } = useAccount()
+  const { isConnected } = useAccount()
   const { openConnectModal } = useConnectModal()
-  const { id, isConnected: isConnectedToChainJet } = useUser()
-  const { data: activeProfile, loading } = useActiveProfile()
+  const { isConnected: isConnectedToChainJet, refetch } = useUser()
+  const { data: activeProfile, loading: profileLoading } = useActiveProfile()
   const { lensCredentials, loading: lensCredentialsLoading } = useLensCredentials()
+  const { createLensCredentials } = useCreateLensCredentials()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [signedInWithLens, setSignedInWithLens] = useState(false)
 
   useEffect(() => {
     if (lensCredentials) {
@@ -26,16 +30,48 @@ export default function SignInModal({ open, onSignIn, onCancel }: Props) {
     }
   }, [lensCredentials, onSignIn])
 
-  if (loading || lensCredentialsLoading || lensCredentials) {
+  const connectCredentials = useCallback(async () => {
+    if (signedInWithLens && activeProfile) {
+      if (!localStorage.getItem('lens.credentials')) {
+        setError(`Error fetching credentials. Please try again.`)
+        return
+      }
+      const credentials = JSON.parse(localStorage.getItem('lens.credentials') || '{}')
+      if (!credentials.data.refreshToken) {
+        setError(`Error fetching credentials. Please try again.`)
+        return
+      }
+      setLoading(true)
+      await createLensCredentials({
+        profileId: activeProfile.id,
+        handle: activeProfile.handle,
+        accessToken: '',
+        refreshToken: credentials.data.refreshToken,
+      })
+      setLoading(false)
+    }
+  }, [activeProfile, createLensCredentials, signedInWithLens])
+
+  useEffect(() => {
+    if (signedInWithLens && activeProfile) {
+      connectCredentials()
+    }
+  }, [activeProfile, connectCredentials, signedInWithLens])
+
+  if (profileLoading || lensCredentialsLoading || lensCredentials) {
     return <></>
   }
 
-  const handleSignInWithLens = () => {
-    // TODO add credentials to ChainJet
+  const handleSignInWithLens = async () => {
+    // we don't know if activeProfile has been loaded yet, so useEffect will take care of it
+    setLoading(true)
+    setSignedInWithLens(true)
   }
 
-  const handleChainJetSignIn = () => {
-    // onSignIn()
+  const handleChainJetSignIn = async () => {
+    setLoading(true)
+    await refetch()
+    setLoading(false)
   }
 
   return (
@@ -46,7 +82,9 @@ export default function SignInModal({ open, onSignIn, onCancel }: Props) {
         </Text>
       </Modal.Header>
       <Modal.Body>
-        {isConnectedToChainJet ? (
+        {loading ? (
+          <Loading />
+        ) : isConnectedToChainJet ? (
           <SignInWithLens onSignIn={handleSignInWithLens} />
         ) : isConnected ? (
           <SignInWithChainJet onSignIn={handleChainJetSignIn} />
@@ -59,6 +97,7 @@ export default function SignInModal({ open, onSignIn, onCancel }: Props) {
             Connect Wallet
           </button>
         )}
+        {error && <div className="text-red-500">{error}</div>}
       </Modal.Body>
     </Modal>
   )

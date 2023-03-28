@@ -1,5 +1,10 @@
 import { ChainJetContext } from '@/components/providers/ChainJetContextProvider'
-import { fetchLensCredentials, forkWorkflow, lensAccountCredentialId } from '@/services/chainjet.service'
+import {
+  createCredentials,
+  fetchLensCredentials,
+  forkWorkflow,
+  lensAccountCredentialId,
+} from '@/services/chainjet.service'
 import { useCallback, useContext, useEffect, useState } from 'react'
 
 export function useUser() {
@@ -47,4 +52,37 @@ export function useSchedulePost() {
   )
 
   return { schedulePost, loading, error, workflowId }
+}
+
+export function useCreateLensCredentials() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
+  const [credentialId, setCredentialId] = useState(null)
+
+  const createLensCredentials = useCallback(
+    async (credentials: { profileId: string; handle: string; accessToken: string; refreshToken: string }) => {
+      setLoading(true)
+      let newCredentialId = null
+      try {
+        newCredentialId = await createCredentials({
+          name: `Lens Profile ${credentials.handle}`,
+          integrationAccount: lensAccountCredentialId,
+          inputs: {
+            profileId: credentials.profileId,
+            handle: credentials.handle,
+            accessToken: credentials.accessToken,
+            refreshToken: credentials.refreshToken,
+          },
+        })
+        setCredentialId(newCredentialId)
+      } catch (err) {
+        setError(err as Error)
+      }
+      setLoading(false)
+      return newCredentialId
+    },
+    [],
+  )
+
+  return { createLensCredentials, loading, error, credentialId }
 }
