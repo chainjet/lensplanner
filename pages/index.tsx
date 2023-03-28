@@ -6,11 +6,13 @@ import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { Inter } from 'next/font/google'
 import Head from 'next/head'
 import { useState } from 'react'
+import { useAccount } from 'wagmi'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
   const [postScheduled, setPostScheduled] = useState<string | null>(null)
+  const { isConnected } = useAccount()
 
   return (
     <>
@@ -27,7 +29,7 @@ export default function Home() {
             <code className={styles.code}>LensPlanner</code>&nbsp;🌿
           </p>
           <div>
-            <ConnectButton />
+            <ConnectButton chainStatus="none" />
           </div>
         </div>
 

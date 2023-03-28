@@ -1,19 +1,47 @@
 import { useSchedulePost } from '@/hooks/chainjet.hooks'
 import { CollectionSettings } from '@/utils/types'
 import { Listbox, Transition } from '@headlessui/react'
-import { CalendarIcon, CircleStackIcon, MusicalNoteIcon, PhotoIcon, VideoCameraIcon } from '@heroicons/react/20/solid'
+import {
+  CalendarIcon,
+  CircleStackIcon,
+  MusicalNoteIcon,
+  PhotoIcon,
+  VideoCameraIcon,
+  XCircleIcon,
+} from '@heroicons/react/20/solid'
 import { Loading, Tooltip } from '@nextui-org/react'
-import { FormEvent, Fragment, useState } from 'react'
+import axios from 'axios'
+import { ChangeEvent, FormEvent, Fragment, useRef, useState } from 'react'
 import { useAccount } from 'wagmi'
 import CollectSettingsModal from './CollectSettingsModal'
 import ScheduleModal from './ScheduleModal'
 import SignInModal from './SignInModal'
 import WalletAvatar from './WalletAvatar'
 
-const uploadMediaOptions = [
+interface MediaOption {
+  name: string
+  value: string
+  icon: React.ForwardRefExoticComponent<React.SVGProps<SVGSVGElement> & { title?: string; titleId?: string }>
+  iconColor: string
+  bgColor: string
+}
+
+const uploadMediaOptions: MediaOption[] = [
   { name: 'Upload image(s)', value: 'image', icon: PhotoIcon, iconColor: 'text-white', bgColor: 'bg-red-500' },
-  { name: 'Upload video', value: 'video', icon: VideoCameraIcon, iconColor: 'text-white', bgColor: 'bg-pink-400' },
-  { name: 'Upload audio', value: 'audio', icon: MusicalNoteIcon, iconColor: 'text-white', bgColor: 'bg-green-400' },
+  {
+    name: 'Video (coming soon)',
+    value: 'video',
+    icon: VideoCameraIcon,
+    iconColor: 'text-white',
+    bgColor: 'bg-pink-400',
+  },
+  {
+    name: 'Audio (coming soon)',
+    value: 'audio',
+    icon: MusicalNoteIcon,
+    iconColor: 'text-white',
+    bgColor: 'bg-green-400',
+  },
 ]
 
 function classNames(...classes: string[]) {
@@ -35,6 +63,9 @@ export default function CreatePostForm({ onPostScheduled }: Props) {
   const [collectionSettings, setCollectionSettings] = useState<CollectionSettings>({ collect: 'anyone' })
   const { address } = useAccount()
   const { schedulePost } = useSchedulePost()
+  const fileInputRef = useRef<any>(null)
+  const [images, setImages] = useState<string[]>([])
+  const [uploadingFiles, setUploadingFiles] = useState(false)
 
   async function handleSubmit(e?: FormEvent<HTMLFormElement>) {
     e?.preventDefault()
@@ -60,6 +91,7 @@ export default function CreatePostForm({ onPostScheduled }: Props) {
       datetime: scheduleDate.toISOString(),
       content: post,
       ...collectionSettings,
+      ...(images.length ? { imageUrl: images } : {}),
     }
     const workflowId = await schedulePost('6421dc49f0e8d05438a6eed5', templateData, lensCredentials)
     setPost('')
@@ -87,8 +119,44 @@ export default function CreatePostForm({ onPostScheduled }: Props) {
     setCollectSettingsModalOpen(false)
   }
 
-  const handleMediaOption = (option: typeof uploadMediaOptions[number]) => {
-    console.log(`Upload ${option.value}`)
+  const handleFileInputChange = async (event: ChangeEvent<any>) => {
+    setUploadingFiles(true)
+    const files = event.target.files
+    const cids = []
+    for (const file of files) {
+      const { data } = await axios.post('/api/upload', {
+        type: file.type,
+        size: file.size,
+      })
+      const { url, uuid } = data
+      await axios.put(url, file, {
+        headers: {
+          'Content-type': file.type,
+          'Access-Control-Allow-Origin': '*',
+        },
+      })
+      const { data: imageData } = await axios.get(`/api/upload?uuid=${uuid}`)
+      const { cid } = imageData
+      cids.push(cid)
+    }
+    setImages([...images, ...cids])
+    setUploadingFiles(false)
+  }
+
+  const handleMediaOption = (option: MediaOption) => {
+    if (option.value === 'video' || option.value === 'audio') {
+      // TODO
+      return
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.accept =
+        option.value === 'image' ? 'image/*' : option.value === 'video' ? 'video/*' : 'audio/*'
+      fileInputRef.current.click()
+    }
+  }
+
+  const handleImageDelete = (image: string) => {
+    setImages(images.filter((i) => i !== image))
   }
 
   return (
@@ -96,32 +164,10 @@ export default function CreatePostForm({ onPostScheduled }: Props) {
       <div className="flex-shrink-0">{address && <WalletAvatar address={address} />}</div>
       <div className="flex-1 min-w-0">
         <form action="#" className="relative" onSubmit={handleSubmit}>
-          <div className="overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600">
-            <label htmlFor="post" className="sr-only">
-              Add your post
-            </label>
-            <textarea
-              rows={3}
-              name="post"
-              id="post"
-              className="block w-full resize-none border-0 bg-transparent text-white placeholder:text-gray-400 focus:ring-0 sm:py-1.5 sm:text-sm sm:leading-6"
-              placeholder="Add your post..."
-              value={post}
-              onChange={(e) => setPost(e.target.value)}
-            />
-
-            {/* Spacer element to match the height of the toolbar */}
-            <div className="py-2" aria-hidden="true">
-              {/* Matches height of button in toolbar (1px border + 36px content height) */}
-              <div className="py-px">
-                <div className="h-9" />
-              </div>
-            </div>
-          </div>
-          <div className="absolute inset-x-0 bottom-0 flex justify-between py-2 pl-3 pr-2">
+          <div className="absolute inset-x-0 top-0 flex justify-between py-2 pl-3 pr-2" style={{ marginTop: 78 }}>
             <div className="flex items-center space-x-5">
               <div className="flex items-center">
-                <Listbox onChange={handleMediaOption}>
+                <Listbox value={0 as unknown as MediaOption} onChange={handleMediaOption}>
                   {({ open }) => (
                     <>
                       <div className="relative">
@@ -207,11 +253,54 @@ export default function CreatePostForm({ onPostScheduled }: Props) {
                   type="submit"
                   className="inline-flex items-center px-3 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                 >
-                  {loading ? <Loading /> : 'Post'}
+                  {loading || uploadingFiles ? <Loading /> : 'Post'}
                 </button>
+              </div>
+              {/* {uploadingFiles && <Loading />} */}
+            </div>
+          </div>
+          <div
+            className="overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600"
+            style={{ height: images.length ? 400 : 130 }}
+          >
+            <label htmlFor="post" className="sr-only">
+              Add your post
+            </label>
+            <textarea
+              rows={3}
+              name="post"
+              id="post"
+              className="block w-full resize-none border-0 bg-transparent text-white placeholder:text-gray-400 focus:ring-0 sm:py-1.5 sm:text-sm sm:leading-6"
+              placeholder="Add your post..."
+              value={post}
+              onChange={(e) => setPost(e.target.value)}
+            />
+
+            {/* Spacer element to match the height of the toolbar */}
+            <div className="py-2" aria-hidden="true">
+              {/* Matches height of button in toolbar (1px border + 36px content height) */}
+              <div className="py-px">
+                <div className="h-9" />
               </div>
             </div>
           </div>
+          {images.length > 0 && (
+            <div className="absolute inset-x-0 bottom-0 flex justify-between px-4 pb-2">
+              {images.map((image) => (
+                <div key={image}>
+                  <div className="relative group">
+                    <img src={`https://gateway.ipfscdn.io/ipfs/${image}`} alt="" className="w-full h-auto" />
+                    <button
+                      onClick={() => handleImageDelete(image)}
+                      className="absolute text-white bg-gray-300 rounded-full top-2 left-2 "
+                    >
+                      <XCircleIcon className="w-6 h-6 text-gray-700" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </form>
         {scheduleDate && (
           <div className="mt-2">
@@ -231,6 +320,8 @@ export default function CreatePostForm({ onPostScheduled }: Props) {
           onConfirm={handleCollectionSettingsChange}
         />
       )}
+
+      <input type="file" ref={fileInputRef} multiple style={{ display: 'none' }} onChange={handleFileInputChange} />
     </div>
   )
 }
