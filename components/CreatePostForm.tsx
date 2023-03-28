@@ -66,6 +66,7 @@ export default function CreatePostForm({ onPostScheduled }: Props) {
   const fileInputRef = useRef<any>(null)
   const [images, setImages] = useState<string[]>([])
   const [uploadingFiles, setUploadingFiles] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(e?: FormEvent<HTMLFormElement>) {
     e?.preventDefault()
@@ -120,6 +121,11 @@ export default function CreatePostForm({ onPostScheduled }: Props) {
   }
 
   const handleFileInputChange = async (event: ChangeEvent<any>) => {
+    if (images.length + event.target.files.length > 4) {
+      setError(`You can attach up to 4 images per post.`)
+      return
+    }
+    setError(null)
     setUploadingFiles(true)
     const files = event.target.files
     const cids = []
@@ -289,7 +295,12 @@ export default function CreatePostForm({ onPostScheduled }: Props) {
               {images.map((image) => (
                 <div key={image}>
                   <div className="relative group">
-                    <img src={`https://gateway.ipfscdn.io/ipfs/${image}`} alt="" className="w-full h-auto" />
+                    <img
+                      src={`https://gateway.ipfscdn.io/ipfs/${image}`}
+                      alt=""
+                      className="w-full h-auto"
+                      style={{ maxHeight: 260 }}
+                    />
                     <button
                       onClick={() => handleImageDelete(image)}
                       className="absolute text-white bg-gray-300 rounded-full top-2 left-2 "
@@ -305,6 +316,11 @@ export default function CreatePostForm({ onPostScheduled }: Props) {
         {scheduleDate && (
           <div className="mt-2">
             <span className="text-sm">Scheduled at: {scheduleDate.toLocaleString()}</span>
+          </div>
+        )}
+        {error && (
+          <div className="mt-2">
+            <span className="text-sm text-red-500">{error}</span>
           </div>
         )}
       </div>
