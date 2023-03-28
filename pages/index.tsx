@@ -2,6 +2,7 @@ import CreatePostForm from '@/components/CreatePostForm'
 import Footer from '@/components/Footer'
 import PostScheduledAlert from '@/components/PostScheduledAlert'
 import styles from '@/styles/Home.module.css'
+import { Row } from '@nextui-org/react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { Inter } from 'next/font/google'
 import Head from 'next/head'
@@ -22,14 +23,18 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className={styles.main}>
-        <div className={styles.description}>
-          <p>
-            Schedule Lens Posts with&nbsp;
-            <code className={styles.code}>LensPlanner</code>&nbsp;🌿
-          </p>
+      <main className={`${styles.main} px-4 py-0 md:px-24 md:pb-24 md:pt-12`}>
+        <div className={`${styles.description} block md:flex`}>
           <div>
-            <ConnectButton chainStatus="none" />
+            <p>
+              Schedule Lens Posts with&nbsp;
+              <code className={styles.code}>LensPlanner</code>&nbsp;🌿
+            </p>
+          </div>
+          <div>
+            <Row justify="center" align="center" className="mt-6 md:mt-0">
+              <ConnectButton chainStatus="none" />
+            </Row>
           </div>
         </div>
 
