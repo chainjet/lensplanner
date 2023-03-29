@@ -92,7 +92,7 @@ export default function CreatePostForm({ onPostScheduled }: Props) {
       datetime: scheduleDate.toISOString(),
       content: post,
       ...collectionSettings,
-      ...(images.length ? { imageUrl: images } : {}),
+      ...(images.length ? { imageUrl: images.map((cid) => `ipfs://${cid}`) } : {}),
     }
     const workflowId = await schedulePost('6421dc49f0e8d05438a6eed5', templateData, lensCredentials)
     setPost('')

@@ -22,6 +22,14 @@ export default function Home() {
         <meta name="description" content="Schedule posts on Lens Protocol" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
+        <meta property="og:title" content="LensPlanner.xyz - Schedule Lens Posts" />
+        <meta property="og:description" content="Schedule posts on Lens Protocol" />
+        <meta property="og:image" content="https://lensplanner.xyz/lensplanner.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@lensplanner" />
+        <meta name="twitter:title" content="LensPlanner.xyz - Schedule Lens Posts" />
+        <meta name="twitter:description" content="Schedule posts on Lens Protocol" />
+        <meta name="twitter:image" content="https://lensplanner.xyz/lensplanner.png" />
       </Head>
       <main className={`${styles.main} px-4 py-0 md:px-24 md:pb-24 md:pt-12`}>
         <div className={`${styles.description} block md:flex`}>
