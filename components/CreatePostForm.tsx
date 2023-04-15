@@ -12,6 +12,7 @@ import {
 import { Loading, Tooltip } from '@nextui-org/react'
 import axios from 'axios'
 import { ChangeEvent, FormEvent, Fragment, useRef, useState } from 'react'
+import TextareaAutosize from 'react-textarea-autosize'
 import { useAccount } from 'wagmi'
 import CollectSettingsModal from './CollectSettingsModal'
 import ScheduleModal from './ScheduleModal'
@@ -170,7 +171,10 @@ export default function CreatePostForm({ onPostScheduled }: Props) {
       <div className="flex-shrink-0">{address && <WalletAvatar address={address} />}</div>
       <div className="flex-1 min-w-0">
         <form action="#" className="relative" onSubmit={handleSubmit}>
-          <div className="absolute inset-x-0 top-0 flex justify-between py-2 pl-3 pr-2" style={{ marginTop: 78 }}>
+          <div
+            className="absolute inset-x-0 bottom-0 flex justify-between py-2 pl-3 pr-2"
+            style={{ marginBottom: images.length ? 270 : 0 }}
+          >
             <div className="flex items-center space-x-5">
               <div className="flex items-center">
                 <Listbox value={0 as unknown as MediaOption} onChange={handleMediaOption}>
@@ -262,21 +266,21 @@ export default function CreatePostForm({ onPostScheduled }: Props) {
                   {loading || uploadingFiles ? <Loading /> : 'Post'}
                 </button>
               </div>
-              {/* {uploadingFiles && <Loading />} */}
             </div>
           </div>
           <div
             className="overflow-hidden rounded-lg shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600"
-            style={{ height: images.length ? 400 : 130 }}
+            style={{ minHeight: images.length ? 400 : 130 }}
           >
             <label htmlFor="post" className="sr-only">
               Add your post
             </label>
-            <textarea
-              rows={3}
+            <TextareaAutosize
               name="post"
               id="post"
+              minRows={3}
               className="block w-full resize-none border-0 bg-transparent text-white placeholder:text-gray-400 focus:ring-0 sm:py-1.5 sm:text-sm sm:leading-6"
+              style={{ marginBottom: images.length ? 270 : 0 }}
               placeholder="Add your post..."
               value={post}
               onChange={(e) => setPost(e.target.value)}
