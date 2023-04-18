@@ -1,4 +1,4 @@
-import { useCreateLensCredentials, useLensCredentials, useUser } from '@/hooks/chainjet.hooks'
+import { useCreateLensCredentials, useLensCredentials, useUpdateLensCredentials, useUser } from '@/hooks/chainjet.hooks'
 import { useActiveProfile } from '@lens-protocol/react'
 import { Loading, Modal, Text } from '@nextui-org/react'
 import { useConnectModal } from '@rainbow-me/rainbowkit'
@@ -11,24 +11,26 @@ interface Props {
   open: boolean
   onSignIn: (lensCredentials: { id: string; name: string }) => void
   onCancel: () => void
+  lensCredentialsExpired: boolean
 }
 
-export default function SignInModal({ open, onSignIn, onCancel }: Props) {
+export default function SignInModal({ open, onSignIn, onCancel, lensCredentialsExpired }: Props) {
   const { isConnected } = useAccount()
   const { openConnectModal } = useConnectModal()
   const { isConnected: isConnectedToChainJet, refetch } = useUser()
   const { data: activeProfile, loading: profileLoading } = useActiveProfile()
   const { lensCredentials, loading: lensCredentialsLoading } = useLensCredentials()
   const { createLensCredentials } = useCreateLensCredentials()
+  const { updateLensCredentials } = useUpdateLensCredentials()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [signedInWithLens, setSignedInWithLens] = useState(false)
 
   useEffect(() => {
-    if (lensCredentials) {
+    if (lensCredentials && (!lensCredentialsExpired || signedInWithLens)) {
       onSignIn(lensCredentials)
     }
-  }, [lensCredentials, onSignIn])
+  }, [lensCredentials, onSignIn, lensCredentialsExpired, signedInWithLens])
 
   const connectCredentials = useCallback(async () => {
     if (signedInWithLens && activeProfile) {
@@ -42,15 +44,31 @@ export default function SignInModal({ open, onSignIn, onCancel }: Props) {
         return
       }
       setLoading(true)
-      await createLensCredentials({
-        profileId: activeProfile.id,
-        handle: activeProfile.handle,
-        accessToken: '',
-        refreshToken: credentials.data.refreshToken,
-      })
+      if (lensCredentials && lensCredentialsExpired) {
+        await updateLensCredentials(lensCredentials.id, {
+          profileId: activeProfile.id,
+          handle: activeProfile.handle,
+          accessToken: '',
+          refreshToken: credentials.data.refreshToken,
+        })
+      } else {
+        await createLensCredentials({
+          profileId: activeProfile.id,
+          handle: activeProfile.handle,
+          accessToken: '',
+          refreshToken: credentials.data.refreshToken,
+        })
+      }
       setLoading(false)
     }
-  }, [activeProfile, createLensCredentials, signedInWithLens])
+  }, [
+    activeProfile,
+    createLensCredentials,
+    lensCredentials,
+    lensCredentialsExpired,
+    signedInWithLens,
+    updateLensCredentials,
+  ])
 
   useEffect(() => {
     if (signedInWithLens && activeProfile) {
@@ -58,7 +76,7 @@ export default function SignInModal({ open, onSignIn, onCancel }: Props) {
     }
   }, [activeProfile, connectCredentials, signedInWithLens])
 
-  if (profileLoading || lensCredentialsLoading || lensCredentials) {
+  if (profileLoading || lensCredentialsLoading || (lensCredentials && !lensCredentialsExpired)) {
     return <></>
   }
 
@@ -85,7 +103,7 @@ export default function SignInModal({ open, onSignIn, onCancel }: Props) {
         {loading ? (
           <Loading />
         ) : isConnectedToChainJet ? (
-          <SignInWithLens onSignIn={handleSignInWithLens} />
+          <SignInWithLens onSignIn={handleSignInWithLens} credentialsExpired={lensCredentialsExpired} />
         ) : isConnected ? (
           <SignInWithChainJet onSignIn={handleChainJetSignIn} />
         ) : (

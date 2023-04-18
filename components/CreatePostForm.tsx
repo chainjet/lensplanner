@@ -68,6 +68,7 @@ export default function CreatePostForm({ onPostScheduled }: Props) {
   const [images, setImages] = useState<string[]>([])
   const [uploadingFiles, setUploadingFiles] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [lensCredentialsExpired, setLensCredentialsExpired] = useState(false)
 
   async function handleSubmit(e?: FormEvent<HTMLFormElement>) {
     e?.preventDefault()
@@ -95,12 +96,23 @@ export default function CreatePostForm({ onPostScheduled }: Props) {
       ...collectionSettings,
       ...(images.length ? { imageUrl: images.map((cid) => `ipfs://${cid}`) } : {}),
     }
-    const workflowId = await schedulePost('6421dc49f0e8d05438a6eed5', templateData, lensCredentials)
-    setPost('')
-    setLoading(false)
-    setFormSubmitted(false)
-    setScheduleDate(null)
-    onPostScheduled(workflowId)
+    try {
+      const workflowId = await schedulePost('6421dc49f0e8d05438a6eed5', templateData, lensCredentials)
+      setPost('')
+      setLoading(false)
+      setFormSubmitted(false)
+      setScheduleDate(null)
+      onPostScheduled(workflowId)
+    } catch (err) {
+      const error = (err as Error).message
+      setError(error)
+      setLoading(false)
+      setFormSubmitted(false)
+      if (error.includes('Authentication is expired')) {
+        setLensCredentialsExpired(true)
+        setSignInModalOpen(true)
+      }
+    }
   }
 
   const handleSignInCancel = () => {
@@ -329,7 +341,14 @@ export default function CreatePostForm({ onPostScheduled }: Props) {
         )}
       </div>
 
-      {signInModalOpen && <SignInModal open onCancel={handleSignInCancel} onSignIn={handleSignIn} />}
+      {signInModalOpen && (
+        <SignInModal
+          open
+          onCancel={handleSignInCancel}
+          onSignIn={handleSignIn}
+          lensCredentialsExpired={lensCredentialsExpired}
+        />
+      )}
       {scheduleModalOpen && (
         <ScheduleModal open onCancel={() => setScheduleModalOpen(false)} onSchedule={handleScheduleSelected} />
       )}

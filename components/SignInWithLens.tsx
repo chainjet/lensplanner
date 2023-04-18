@@ -4,9 +4,10 @@ import { InjectedConnector } from 'wagmi/connectors/injected'
 
 interface Props {
   onSignIn?: () => void
+  credentialsExpired: boolean
 }
 
-export default function SignInWithLens({ onSignIn }: Props) {
+export default function SignInWithLens({ onSignIn, credentialsExpired }: Props) {
   const { isConnected } = useAccount()
   const { execute: login, error, isPending } = useWalletLogin()
   const { disconnectAsync } = useDisconnect()
@@ -40,7 +41,11 @@ export default function SignInWithLens({ onSignIn }: Props) {
         </button>
       </div>
       <div>
-        <span className="text-xs">Last step: Sign In With Lens 🌿</span>
+        <span className="text-xs">
+          {credentialsExpired
+            ? 'Your Lens credentials expired, please authenticate again'
+            : 'Last step: Sign In With Lens 🌿'}
+        </span>
       </div>
     </div>
   )

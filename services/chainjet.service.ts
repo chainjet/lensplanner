@@ -74,6 +74,33 @@ export async function createCredentials(credentials: {
   return data?.createOneAccountCredential?.id
 }
 
+export async function updateCredentials(
+  accountId: string,
+  credentials: {
+    name: string
+    integrationAccount: string
+    inputs: Record<string, any>
+  },
+) {
+  const query = `
+  mutation ($input: UpdateOneAccountCredentialInput!) {
+    updateOneAccountCredential(input: $input) {
+      id
+    }
+  }`
+  const variables = {
+    input: {
+      id: accountId,
+      update: {
+        name: credentials.name,
+        credentialInputs: credentials.inputs,
+      },
+    },
+  }
+  const data = await sendQuery(query, variables)
+  return data?.createOneAccountCredential?.id
+}
+
 async function sendQuery(query: string, variables: Record<string, any> = {}) {
   const res = await fetch('https://api.chainjet.io/graphql', {
     method: 'POST',
@@ -84,5 +111,8 @@ async function sendQuery(query: string, variables: Record<string, any> = {}) {
     body: JSON.stringify({ query, variables }),
   })
   const json = await res.json()
+  if (json.errors) {
+    throw new Error(json.errors[0].message)
+  }
   return json?.data
 }

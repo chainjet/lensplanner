@@ -4,6 +4,7 @@ import {
   fetchLensCredentials,
   forkWorkflow,
   lensAccountCredentialId,
+  updateCredentials,
 } from '@/services/chainjet.service'
 import { useCallback, useContext, useEffect, useState } from 'react'
 
@@ -42,10 +43,12 @@ export function useSchedulePost() {
         }
         newWorkflowId = await forkWorkflow(id, templateInputs, credentialIds)
         setWorkflowId(newWorkflowId)
+        setLoading(false)
       } catch (err) {
         setError(err as Error)
+        setLoading(false)
+        throw err
       }
-      setLoading(false)
       return newWorkflowId
     },
     [],
@@ -85,4 +88,40 @@ export function useCreateLensCredentials() {
   )
 
   return { createLensCredentials, loading, error, credentialId }
+}
+
+export function useUpdateLensCredentials() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
+  const [credentialId, setCredentialId] = useState(null)
+
+  const updateLensCredentials = useCallback(
+    async (
+      accountId: string,
+      credentials: { profileId: string; handle: string; accessToken: string; refreshToken: string },
+    ) => {
+      setLoading(true)
+      let newCredentialId = null
+      try {
+        newCredentialId = await updateCredentials(accountId, {
+          name: `Lens Profile ${credentials.handle}`,
+          integrationAccount: lensAccountCredentialId,
+          inputs: {
+            profileId: credentials.profileId,
+            handle: credentials.handle,
+            accessToken: credentials.accessToken,
+            refreshToken: credentials.refreshToken,
+          },
+        })
+        setCredentialId(newCredentialId)
+      } catch (err) {
+        setError(err as Error)
+      }
+      setLoading(false)
+      return newCredentialId
+    },
+    [],
+  )
+
+  return { updateLensCredentials, loading, error, credentialId }
 }
